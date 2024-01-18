@@ -7,6 +7,8 @@
 <p><%= f.text_field :name, :size => 50, :required => true %></p>
 <p><%= f.text_area :description, :rows => 7 %></p>
 
+<p><label for="group_category_layout"><%= l(:field_group_category_layout) %></label><%= group_category_layout_for_select(@custom_field) %></p>
+
 <% if @custom_field.format.multiple_supported %>
 <p>
   <%= f.check_box :multiple %>

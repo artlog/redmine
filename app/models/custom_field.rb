@@ -100,7 +100,8 @@ class CustomField < ActiveRecord::Base
     'user_role',
     'version_status',
     'extensions_allowed',
-    'full_width_layout')
+    'full_width_layout',
+    'group_category_layout')
 
   def copy_from(arg, options={})
     return if arg.blank?
