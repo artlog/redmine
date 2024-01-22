@@ -227,4 +227,45 @@ module CustomFieldsHelper
       end
     end.join("\n").html_safe
   end
+
+   # Return an array of custom fields for which we want id.
+  def group_category_layout_for_select(selected_custom_field)
+    custom_fields=CustomField.all
+    select='<select name="custom_field[group_category_layout]" id="group_category_layout">'
+    select+='<option value=""'
+    if selected_custom_field.group_category_layout == ''
+      select+=' selected="true"'
+    end
+    select+=">None</option>\n"
+    custom_fields.each do |custom_field|
+      id_str=String(custom_field.id)
+      select +='<option value="' + id_str
+      if id_str == selected_custom_field.group_category_layout
+        select += '" selected="true'
+      end
+      select += '">' + custom_field.name + "</option>\n"
+    end
+    select+='</select>'
+    select.html_safe
+  end
+
+  def group_category_layout_custom_field(identifier)
+    if /\A\d+\z/.match(identifier)
+      @custom_field =  CustomField.find(Integer(identifier))
+    end
+    rescue ActiveRecord::RecordNotFound
+      nil
+  end
+
+  def group_category_layout_display_name(identifier)
+    @custom_field = group_category_layout_custom_field(identifier)
+    @custom_field ? @custom_field.name : identifier
+  end
+
+  def group_category_layout_description(identifier)
+    @custom_field = group_category_layout_custom_field(identifier)
+    title = @custom_field ? @custom_field.description.presence : nil
+    title ? title : identifier
+  end
+
 end

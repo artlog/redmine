@@ -1,6 +1,10 @@
 <% custom_field_values = @issue.editable_custom_field_values %>
 <% custom_field_values_full_width = custom_field_values.select { |value| value.custom_field.full_width_layout? } %>
 <% custom_field_values -= custom_field_values_full_width %>
+<% custom_field_values_group_category_layout = custom_field_values.select { |value| value.custom_field.group_category_layout? } %>
+<% custom_field_values -= custom_field_values_group_category_layout %>
+<% custom_field_values_group_category_layout = custom_field_values_group_category_layout.sort_by { |value| [value.custom_field.group_category_layout] } %>
+
 
 <% if custom_field_values.present? %>
 <div class="splitcontent">
@@ -17,6 +21,24 @@
 </div>
 </div>
 <% end %>
+
+<% group_category_layout = '' %>
+
+<% custom_field_values_group_category_layout.each do |value| %>
+<% if group_category_layout != value.custom_field.group_category_layout -%>
+  <% if group_category_layout != '' -%>
+  </fieldset>
+<% end -%>
+  <% group_category_layout = value.custom_field.group_category_layout %>
+<fieldset class="group_category_layout" >
+  <legend>
+    <span title="<%= group_category_layout_description group_category_layout %>" class="field-description"><%= group_category_layout_display_name group_category_layout %>
+    </span>
+  </legend>
+<% end -%>
+    <p><%= custom_field_tag_with_label :issue, value, :required => @issue.required_attribute?(value.custom_field_id) %></p>
+  <% end %>
+</fieldset>
 
 <% custom_field_values_full_width.each do |value| %>
   <p><%= custom_field_tag_with_label :issue, value, :required => @issue.required_attribute?(value.custom_field_id) %></p>

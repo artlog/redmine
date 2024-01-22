@@ -15,6 +15,7 @@ api.array :custom_fields do
       api.multiple          field.multiple?
       api.default_value     field.default_value
       api.visible           field.visible?
+      api.group_catgory_layout field.group_category_layout?
 
       values = field.possible_values_options
       if values.present?
