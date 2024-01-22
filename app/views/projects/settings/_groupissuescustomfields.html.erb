@@ -1,0 +1,140 @@
+<p><%= select_tag "tracker_id", options_from_collection_for_select(@project.trackers.collect, "id", "name"), {:required => true, :onchange => "refresh_trackers(this);"} %><p>
+
+<div id='custom_fields_form'>
+  <% @project.trackers.each do |t| %>
+  <div id='tracker_<%= t.id %>' class='tracker'>
+    <span style="color: #888;"><%= l(:changed_cf_position) %></span>
+    <ul class='sortable_items sortable_tracker-<%= t.id %> nil not_a_group'>
+      <% @cfs.select{|x| x[0]==t.id && x[2]==nil}.each do |x| %>
+      <li id="<%= x[6] %>" pos="<%= x[8] %>"><%= x[7] %></li>
+      <% end %>
+    </ul>
+    <span style="color: #888;"><%= l(:global_cf_position) %></span>
+    <ul class="sortable_items sortable_tracker-<%= t.id %> unsorted not_a_group">
+      <% Issue.new(project_id: @project.id, tracker_id: t.id).custom_field_values.
+           select{|x| ! @cfs.select{|c| c[0]==t.id}.map{|c| c[6]}.include?(x.custom_field_id)}.
+           collect{|x| [x.custom_field.id, x.custom_field.name, x.custom_field.position]}.each do |x| %>
+      <li id="<%= x[0] %>" pos="<%= x[2] %>"><%= x[1] %></li>
+      <% end %>
+    </ul>
+    <span style="color: #888;"><%= l(:grouped_cf) %></span>
+    <div class='sortable_groups groups_tracker-<%= t.id %>'>
+      <% @cfs.select{|x| x[0]==t.id && x[2]!=nil}.map{|x| x[2]}.uniq.each do |g| %>
+      <div class="sortable_group">
+        <input type="text" value="<%= g %>" style="background: #ddf; padding: 5px; width: 360px"/>
+        <img src="/images/delete.png" onclick="remove_label(this, 'tracker-<%= t.id %>');"/>
+        <ul class='sortable_items sortable_tracker-<%= t.id %>'>
+          <% @cfs.select{|x| x[0]==t.id && x[2]==g}.each do |x| %>
+          <li id="<%= x[6] %>" pos="<%= x[8] %>"><%= x[7] %></li>
+          <% end %>
+        </ul>
+      </div>
+      <% end %>
+      <div>
+        <input type="text" value="" style="background: #ddf; padding: 5px; width: 370px"/>
+        <img src="/images/add.png" style="" onclick="add_label(this, 'tracker-<%= t.id %>');"/>
+      </div>
+    </div>
+  </div>
+  <% end %>
+<%= form_for @project, :url => { :action => 'groupissuescustomfields', :id => @project },
+            :html => {:id => 'groupissuescustomfields-form',
+                      :method => :post} do |f| %>
+
+<%= hidden_field :group_issues_custom_fields, '', :id => 'group_issues_custom_fields', :name => 'group_issues_custom_fields' %>
+<p><%= submit_tag l(:button_save), :onclick => "fill_json_data();" %></p>
+<% end %>
+</div>
+
+<script>
+function init_sortables(labelclass) {
+  $( '.groups_' + labelclass ).sortable({
+    items: 'div.sortable_group',
+    connectWith: '.groups_' + labelclass,
+    start: function(event, ui) {
+      ui.placeholder.height(ui.item.height());
+    },
+    axis: 'y'
+  });
+  $( '.sortable_' + labelclass ).sortable({
+    connectWith: '.sortable_' + labelclass,
+    update: function(event, ui) {
+      if (ui.item.parent().hasClass('unsorted')) {
+        ui.item.parent().prepend(ui.item);
+        ui.item.parent().children('li').each(function () {
+          if (parseInt($(this).attr('pos')) < parseInt(ui.item.attr('pos'))) {
+            ui.item.insertAfter(this);
+          }
+        });
+      }
+    },
+    axis: 'y'
+  }).disableSelection();
+}
+function refresh_trackers(tracker) {
+  $('.tracker').hide();
+  $('#tracker_' + tracker.value).show();
+}
+function add_label(label, labelclass) {
+  var old_label = $(label), new_label = $(label).parent().clone();
+  new_label.children().first().val('').trigger('change');
+  old_label.attr('src','/images/delete.png').attr('onclick','remove_label(this, "' + labelclass + '");');
+  old_label.prev().width('360px');
+  old_label.parent().addClass('ui-sortable-handle sortable_group');
+  old_label.parent().sortable({
+    connectWith: '.groups_' + labelclass
+  }).disableSelection();
+  old_label.parent().append('<ul id="' + labelclass + '_" class="sortable_items sortable_' + labelclass + '"/>');
+  old_label.next().sortable({
+    connectWith: '.sortable_' + labelclass
+  }).disableSelection();
+  old_label.parent().parent().append(new_label);
+}
+function remove_label(label, labelclass) {
+  $(label).next().children().each(function () {
+    var item = this;
+    $('.unsorted.sortable_' + labelclass).prepend(this);
+    $('.unsorted.sortable_' + labelclass).children('li').each(function () {
+      if (parseInt($(this).attr('pos')) < parseInt($(item).attr('pos'))) {
+        $(item).insertAfter(this);
+      }
+    });
+  });
+  $(label).parent().hide();
+}
+function fill_json_data() {
+  var r = {}, gp = 0, cp = 0;
+  $('#custom_fields_form').children('div').each(function () {
+    var tracker_id = this.id.split('_').pop();
+    gp = 0, cp = 0;
+
+    // Group 'nil'
+    r[tracker_id] = {};
+    r[tracker_id][++gp] = {'cfs': {}};
+    $(this).children('.nil').children().each(function () {
+      cp++;
+      r[tracker_id][gp]['cfs'][cp] = this.id;
+    });
+    if (! r[tracker_id][gp]['cfs'][1]) { delete r[tracker_id][gp]; }
+    $(this).children('.sortable_groups').children().each(function () {
+      if ($(this).children('ul').length) {
+        r[tracker_id][++gp] = {
+          'name': $(this).children('input').val(),
+          'cfs': {}
+        };
+        cp = 0;
+        $(this).children('ul').children().each(function () {
+          r[tracker_id][gp]['cfs'][++cp] = this.id;
+        });
+        if (! r[tracker_id][gp]['cfs'][1]) { r[tracker_id][gp] = ''; }
+      }
+    });
+    if ( ! r[tracker_id] ) { r[tracker_id] = ''; }
+  });
+  console.log(r);
+  $('#group_issues_custom_fields').val(JSON.stringify(r)); }
+$('#tracker_id').change();
+<% @project.trackers.each do |t| %>
+init_sortables('tracker-<%= t.id %>');
+<% end %>
+</script>

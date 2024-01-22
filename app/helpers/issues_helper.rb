@@ -368,33 +368,48 @@ module IssuesHelper
     r.to_html
   end
 
-  def render_half_width_custom_fields_rows(issue)
-    values = issue.visible_custom_field_values.reject {|value| value.custom_field.full_width_layout?}
-    return if values.empty?
-
-    half = (values.size / 2.0).ceil
-    issue_fields_rows do |rows|
-      values.each_with_index do |value, i|
-        m = (i < half ? :left : :right)
-        rows.send m, custom_field_name_tag(value.custom_field), custom_field_value_tag(value), :class => value.custom_field.css_classes
-      end
-    end
+  def group_by_keys(project_id, tracker_id, custom_field_values)
+    keys_grouped = AttributeGroupField.joins(:attribute_group).
+      where(:attribute_groups => {project_id: project_id, tracker_id: tracker_id}).
+      order("attribute_groups.position", :position).pluck(:name, :custom_field_id).group_by(&:shift)
+    custom_fields_grouped = { nil => (keys_grouped[nil].nil? ? [] :
+      keys_grouped[nil].map{|n| custom_field_values.select{|x| x.custom_field[:id] == n[0]}}.flatten) |
+      custom_field_values.select{|y| ! keys_grouped.values.flatten.include?(y.custom_field[:id])}}
+    keys_grouped.reject{|k,v| k == nil}.each{|k,v| custom_fields_grouped[k] =
+      v.map{|n| custom_field_values.select{|x| x.custom_field[:id] == n[0]}}.flatten}
+    custom_fields_grouped
   end
 
-  def render_full_width_custom_fields_rows(issue)
-    values = issue.visible_custom_field_values.select {|value| value.custom_field.full_width_layout?}
-    return if values.empty?
-
+  def render_custom_fields_rows(issue)
     s = ''.html_safe
-    values.each_with_index do |value, i|
-      attr_value_tag = custom_field_value_tag(value)
-      next if attr_value_tag.blank?
-
-      content =
-        content_tag('hr') +
-        content_tag('p', content_tag('strong', custom_field_name_tag(value.custom_field) )) +
-        content_tag('div', attr_value_tag, class: 'value')
-      s << content_tag('div', content, class: "#{value.custom_field.css_classes} attribute")
+    group_by_keys(issue.project_id, issue.tracker_id, issue.visible_custom_field_values).
+      each do |title, description, values|
+      if values.present?
+        s << content_tag('h4', title, :style => 'background: #0001; padding: 0.3em;') unless title.nil?
+        while values.present?
+          unless values[0].custom_field.full_width_layout?
+            lr_values = []
+            while values.present? && ! values[0].custom_field.full_width_layout?
+              lr_values += [ values.shift ]
+            end
+            half = (lr_values.size / 2.0).ceil
+            s << issue_fields_rows do |rows|
+              lr_values.each_with_index do |value, i|
+                m = (i < half ? :left : :right)
+                rows.send m, custom_field_name_tag(value.custom_field), custom_field_value_tag(value), :class => value.custom_field.css_classes
+              end
+            end
+          else
+            while values.present? && values[0].custom_field.full_width_layout?
+              value=values.shift
+              content = content_tag('div', custom_field_name_tag(value.custom_field) + ":", :class => 'label') +
+                        content_tag('div', custom_field_value_tag(value), :class => 'value')
+              content = content_tag('div', content, :class => "#{value.custom_field.css_classes} attribute")
+              s << content_tag('div', content, :class => 'splitcontent')
+            end
+          end
+        end
+      end
     end
     s
   end
@@ -457,14 +472,23 @@ module IssuesHelper
         end
       end
     end
-    issue.visible_custom_field_values(user).each do |value|
-      cf_value = show_value(value, false)
-      next if cf_value.blank?
-
-      if html
-        items << content_tag('strong', "#{value.custom_field.name}: ") + cf_value
-      else
-        items << "#{value.custom_field.name}: #{cf_value}"
+    group_by_keys(issue.project_id, issue.tracker_id, issue.visible_custom_field_values(user)).each do |title, values|
+      if values.present?
+        unless title.nil?
+          if html
+            items << content_tag('strong', "#{title}")
+          else
+            items << "#{title}"
+          end
+        end
+        values.each do |value|
+          cf_value = show_value(value, false)
+          if html
+            items << content_tag('strong', "#{value.custom_field.name}: ") + cf_value
+          else
+            items << "#{value.custom_field.name}: #{cf_value}"
+          end
+        end
       end
     end
     items
@@ -473,9 +497,12 @@ module IssuesHelper
   def render_email_issue_attributes(issue, user, html=false)
     items = email_issue_attributes(issue, user, html)
     if html
-      content_tag('ul', items.map{|s| content_tag('li', s)}.join("\n").html_safe, :class => "details")
+      content_tag('ul', items.select{|s| s.is_a? String}.map{|s| content_tag('li', s)}.join("\n").html_safe, :class => "details") + "\n" +
+        items.select{|s| !s.is_a? String}.map{|item| content_tag('div', item.shift) + "\n" +
+        content_tag('ul', item.map{|s| content_tag('li', s)}.join("\n").html_safe, :class => "details")}.join("\n").html_safe
     else
-      items.map{|s| "* #{s}"}.join("\n")
+      items.select{|s| s.is_a? String}.map{|s| "* #{s}"}.join("\n") + "\n" +
+        items.select{|s| !s.is_a? String}.map{|item| "#{item.shift}\n" + item.map{|s| "* #{s}"}.join("\n")}.join("\n")
     end
   end
 

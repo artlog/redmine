@@ -1227,6 +1227,9 @@ pt-BR:
   permission_view_news: Ver notícias
   label_no_preview_alternative_html: Visualização não disponível. Faça o %{link} do arquivo.
   label_no_preview_download: download
+  grouped_cf: Agrupar campos personalizados
+  global_cf_position: Posição global de campos personalizados
+  changed_cf_position: Alterar posição de campos personalizados
   setting_close_duplicate_issues: Fechar tarefas duplicadas automaticamente
   error_exceeds_maximum_hours_per_day: Não é possível registrar mais de %{max_hours} horas no mesmo dia (%{logged_hours} horas já foram registradas)
   setting_time_entry_list_defaults: Registro de horas padrão

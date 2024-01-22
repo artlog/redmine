@@ -1,24 +1,33 @@
-<% custom_field_values = @issue.editable_custom_field_values %>
-<% custom_field_values_full_width = custom_field_values.select { |value| value.custom_field.full_width_layout? } %>
-<% custom_field_values -= custom_field_values_full_width %>
-
-<% if custom_field_values.present? %>
-<div class="splitcontent">
-<div class="splitcontentleft">
-<% i = 0 %>
-<% split_on = (custom_field_values.size / 2.0).ceil - 1 %>
-<% custom_field_values.each do |value| %>
-  <p><%= custom_field_tag_with_label :issue, value, :required => @issue.required_attribute?(value.custom_field_id) %></p>
-<% if i == split_on -%>
-</div><div class="splitcontentright">
-<% end -%>
-<% i += 1 -%>
-<% end -%>
-</div>
-</div>
-<% end %>
-
-<% custom_field_values_full_width.each do |value| %>
-  <p><%= custom_field_tag_with_label :issue, value, :required => @issue.required_attribute?(value.custom_field_id) %></p>
-  <%= wikitoolbar_for "issue_custom_field_values_#{value.custom_field_id}", preview_issue_path(:project_id => @issue.project, :issue_id => @issue.id) if value.custom_field.full_text_formatting? %>
+<% group_by_keys(@issue.project_id, @issue.tracker_id, @issue.editable_custom_field_values).each do |title,values| %>
+  <% if values.present? %>
+    <%= content_tag('h4', title, :style => 'background: #0001; padding: 0.3em;') unless title.nil? %>
+    <% while values.present? %>
+      <% if values[0].custom_field.full_width_layout? %>
+        <% while values.present? && values[0].custom_field.full_width_layout? %>
+          <% value = values.shift %>
+          <p><%= custom_field_tag_with_label :issue, value, :required => @issue.required_attribute?(value.custom_field_id) %></p>
+          <%= wikitoolbar_for "issue_custom_field_values_#{value.custom_field_id}", preview_issue_path(:project_id => @issue.project, :issue_id => @issue.id) if value.custom_field.full_text_formatting? %>
+        <% end %>
+      <% else %>
+        <div class="splitcontent">
+          <% lr_values = [] %>
+          <% while values.present? && ! values[0].custom_field.full_width_layout? %>
+            <% lr_values += [ values.shift ] %>
+          <% end %>
+          <div class="splitcontentleft">
+            <% i = 0 %>
+            <% split_on = (lr_values.size / 2.0).ceil - 1 %>
+            <% lr_values.each do |value| %>
+              <p><%= custom_field_tag_with_label :issue, value, :required => @issue.required_attribute?(value.custom_field_id) %></p>
+              <%= wikitoolbar_for "issue_custom_field_values_#{value.custom_field_id}", preview_issue_path(:project_id => @issue.project, :issue_id => @issue.id) if value.custom_field.full_text_formatting? %>
+              <% if i == split_on %>
+                </div><div class="splitcontentright">
+              <% end %>
+              <% i += 1 %>
+            <% end %>
+          </div>
+        </div>
+      <% end %>
+    <% end %>
+  <% end %>
 <% end %>

@@ -203,6 +203,10 @@ class ProjectsController < ApplicationController
     @issue_category ||= IssueCategory.new
     @member ||= @project.members.new
     @trackers = Tracker.sorted.to_a
+    @cfs=AttributeGroup.joins(:custom_fields).joins(:tracker).
+      where(project_id: @project, tracker_id: @trackers, :custom_fields => {id: @project.all_issue_custom_fields.pluck(:id)}).
+      pluck("trackers.id", "id", "name", "position","attribute_group_fields.id", "attribute_group_fields.position",
+        "custom_fields.id", "custom_fields.name", "custom_fields.position").sort_by{|x| [x[3], x[5]]}
 
     @version_status = params[:version_status] || 'open'
     @version_name = params[:version_name]
@@ -231,6 +235,39 @@ class ProjectsController < ApplicationController
         format.api {render_validation_errors(@project)}
       end
     end
+  end
+
+  def groupissuescustomfields
+    # clean invalid values: invalid cfs, empty cf lists, empty groups
+    group_issues_custom_fields = (JSON.parse params[:group_issues_custom_fields]).
+      each{|tid,v| v.replace(v.select{|k,v| v["cfs"] ? v["cfs"].delete_if{|k,v| @project.all_issue_custom_fields.pluck(:id).include?(v)} : v})}.
+      each{|tid,v| v.delete_if{|k,v| v["cfs"].blank?}}.
+      delete_if{|k,v| v.blank?}
+
+    groups = AttributeGroup.where(project_id: @project.id).collect(&:id)
+    fields = AttributeGroupField.where(attribute_group_id: groups).collect(&:id)
+    group_issues_custom_fields.each do |tid,v|
+      v.each do |gp, g|
+        gid = groups.shift
+        if gid.nil?
+          gid=AttributeGroup.create(project_id: @project.id, tracker_id: tid, name: g["name"].nil? ? nil : g["name"], position: gp).id
+        else
+          AttributeGroup.update(gid, project_id: @project.id, tracker_id: tid, name: g["name"].nil? ? nil : g["name"], position: gp)
+        end
+        g['cfs'].each do |cfp, cf|
+          cfid = fields.shift
+          if cfid.nil?
+            AttributeGroupField.create(attribute_group_id: gid, custom_field_id: cf, position: cfp)
+          else
+            AttributeGroupField.update(cfid, attribute_group_id: gid, custom_field_id: cf, position: cfp)
+          end
+        end
+      end
+    end
+    AttributeGroupField.where(id: fields).delete_all
+    AttributeGroup.where(id: groups).destroy_all
+    flash[:notice] = l(:notice_successful_update)
+    redirect_to settings_project_path(@project, :tab => 'groupissuescustomfields')
   end
 
   def archive

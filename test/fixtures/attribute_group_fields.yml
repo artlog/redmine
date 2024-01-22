@@ -1,0 +1,11 @@
+# Read about fixtures at http://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  attribute_group_id:
+  custom_field_id:
+  position: 1
+
+two:
+  attribute_group_id:
+  custom_field_id:
+  position: 1
