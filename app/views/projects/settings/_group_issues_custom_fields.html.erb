@@ -37,8 +37,8 @@
     </div>
   </div>
   <% end %>
-<%= form_for @project, :url => { :action => 'groupissuescustomfields', :id => @project },
-            :html => {:id => 'groupissuescustomfields-form',
+<%= form_for @project, :url => { :action => 'group_issues_custom_fields', :id => @project },
+            :html => {:id => 'group_issues_custom_fields-form',
                       :method => :post} do |f| %>
 
 <%= hidden_field :group_issues_custom_fields, '', :id => 'group_issues_custom_fields', :name => 'group_issues_custom_fields' %>

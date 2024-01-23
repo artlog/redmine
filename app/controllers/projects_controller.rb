@@ -237,7 +237,7 @@ class ProjectsController < ApplicationController
     end
   end
 
-  def groupissuescustomfields
+  def group_issues_custom_fields
     # clean invalid values: invalid cfs, empty cf lists, empty groups
     group_issues_custom_fields = (JSON.parse params[:group_issues_custom_fields]).
       each{|tid,v| v.replace(v.select{|k,v| v["cfs"] ? v["cfs"].delete_if{|k,v| @project.all_issue_custom_fields.pluck(:id).include?(v)} : v})}.
@@ -267,7 +267,7 @@ class ProjectsController < ApplicationController
     AttributeGroupField.where(id: fields).delete_all
     AttributeGroup.where(id: groups).destroy_all
     flash[:notice] = l(:notice_successful_update)
-    redirect_to settings_project_path(@project, :tab => 'groupissuescustomfields')
+    redirect_to settings_project_path(@project, :tab => 'group_issues_custom_fields')
   end
 
   def archive
