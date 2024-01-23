@@ -369,9 +369,12 @@ module IssuesHelper
   end
 
   def group_by_keys(project_id, tracker_id, custom_field_values)
+
     keys_grouped = AttributeGroupField.joins(:attribute_group).
       where(:attribute_groups => {project_id: project_id, tracker_id: tracker_id}).
-      order("attribute_groups.position", :position).pluck(:name, :custom_field_id).group_by(&:shift)
+      order("attribute_groups.position", :position).pluck("attribute_groups.id", :custom_field_id).
+      group_by{ |row| AttributeGroup.find(row.shift(1)).first() }
+    logger.error keys_grouped
     custom_fields_grouped = { nil => (keys_grouped[nil].nil? ? [] :
       keys_grouped[nil].map{|n| custom_field_values.select{|x| x.custom_field[:id] == n[0]}}.flatten) |
       custom_field_values.select{|y| ! keys_grouped.values.flatten.include?(y.custom_field[:id])}}
@@ -383,9 +386,19 @@ module IssuesHelper
   def render_custom_fields_rows(issue)
     s = ''.html_safe
     group_by_keys(issue.project_id, issue.tracker_id, issue.visible_custom_field_values).
-      each do |title, description, values|
+      each do |attribute_group, values|
       if values.present?
-        s << content_tag('h4', title, :style => 'background: #0001; padding: 0.3em;') unless title.nil?
+        group_content = ''.html_safe
+        unless attribute_group.nil?
+          if attribute_group.name.present?
+            title = attribute_group.name
+            group_content << content_tag('legend', title, :style => 'background: #0001; padding: 0.3em;') unless title.nil?
+          end
+          if attribute_group.description.present?
+            description = attribute_group.description
+            group_content << content_tag('div', textilizable(description), :class => 'wiki') unless description.nil?
+          end
+        end
         while values.present?
           unless values[0].custom_field.full_width_layout?
             lr_values = []
@@ -393,7 +406,7 @@ module IssuesHelper
               lr_values += [ values.shift ]
             end
             half = (lr_values.size / 2.0).ceil
-            s << issue_fields_rows do |rows|
+            group_content<< issue_fields_rows do |rows|
               lr_values.each_with_index do |value, i|
                 m = (i < half ? :left : :right)
                 rows.send m, custom_field_name_tag(value.custom_field), custom_field_value_tag(value), :class => value.custom_field.css_classes
@@ -405,10 +418,11 @@ module IssuesHelper
               content = content_tag('div', custom_field_name_tag(value.custom_field) + ":", :class => 'label') +
                         content_tag('div', custom_field_value_tag(value), :class => 'value')
               content = content_tag('div', content, :class => "#{value.custom_field.css_classes} attribute")
-              s << content_tag('div', content, :class => 'splitcontent')
+              group_content << content_tag('div', content, :class => 'splitcontent')
             end
           end
         end
+        s << content_tag('fieldset', group_content, :class => 'group_category_layout');
       end
     end
     s

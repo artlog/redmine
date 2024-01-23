@@ -1,12 +1,25 @@
-<% group_by_keys(@issue.project_id, @issue.tracker_id, @issue.editable_custom_field_values).each do |title,values| %>
+<% group_by_keys(@issue.project_id, @issue.tracker_id, @issue.editable_custom_field_values).each do |attribute_group,values| %>
   <% if values.present? %>
   <fieldset class="group_category_layout" >
-    <% if not title.nil? %>
-      <legend>
-        <span title="<%= title %>" class="field-description"><%= title %>
-        </span>
-      </legend>
-    <% end */
+    <% unless attribute_group.nil? %>
+      <% if attribute_group.name.present? %>
+        <% title = attribute_group.name %>
+        <% if not title.nil? %>
+          <legend>
+            <span title="<%= title %>" class="field-description"><%= title %>
+            </span>
+          </legend>
+	<% end %>
+      <% end %>
+      <% if attribute_group.description.present? %>
+        <% description = attribute_group.description %>
+        <% if not description.nil? %>
+          <div class="wiki">
+	    <%= textilizable(description) %>
+          </div>
+        <% end %>
+      <% end %>
+    <% end %>
     <% while values.present? %>
       <% if values[0].custom_field.full_width_layout? %>
         <% while values.present? && values[0].custom_field.full_width_layout? %>
