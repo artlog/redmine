@@ -1,46 +1,40 @@
-<% custom_field_values = @issue.editable_custom_field_values %>
-<% custom_field_values_full_width = custom_field_values.select { |value| value.custom_field.full_width_layout? } %>
-<% custom_field_values -= custom_field_values_full_width %>
-<% custom_field_values_group_category_layout = custom_field_values.select { |value| value.custom_field.group_category_layout? } %>
-<% custom_field_values -= custom_field_values_group_category_layout %>
-<% custom_field_values_group_category_layout = custom_field_values_group_category_layout.sort_by { |value| [value.custom_field.group_category_layout] } %>
-
-
-<% if custom_field_values.present? %>
-<div class="splitcontent">
-<div class="splitcontentleft">
-<% i = 0 %>
-<% split_on = (custom_field_values.size / 2.0).ceil - 1 %>
-<% custom_field_values.each do |value| %>
-  <p><%= custom_field_tag_with_label :issue, value, :required => @issue.required_attribute?(value.custom_field_id) %></p>
-<% if i == split_on -%>
-</div><div class="splitcontentright">
-<% end -%>
-<% i += 1 -%>
-<% end -%>
-</div>
-</div>
-<% end %>
-
-<% group_category_layout = '' %>
-
-<% custom_field_values_group_category_layout.each do |value| %>
-<% if group_category_layout != value.custom_field.group_category_layout -%>
-  <% if group_category_layout != '' -%>
+<% group_by_keys(@issue.project_id, @issue.tracker_id, @issue.editable_custom_field_values).each do |title,values| %>
+  <% if values.present? %>
+  <fieldset class="group_category_layout" >
+    <% if not title.nil? %>
+      <legend>
+        <span title="<%= title %>" class="field-description"><%= title %>
+        </span>
+      </legend>
+    <% end */
+    <% while values.present? %>
+      <% if values[0].custom_field.full_width_layout? %>
+        <% while values.present? && values[0].custom_field.full_width_layout? %>
+          <% value = values.shift %>
+          <p><%= custom_field_tag_with_label :issue, value, :required => @issue.required_attribute?(value.custom_field_id) %></p>
+          <%= wikitoolbar_for "issue_custom_field_values_#{value.custom_field_id}", preview_issue_path(:project_id => @issue.project, :issue_id => @issue.id) if value.custom_field.full_text_formatting? %>
+        <% end %>
+      <% else %>
+        <div class="splitcontent">
+          <% lr_values = [] %>
+          <% while values.present? && ! values[0].custom_field.full_width_layout? %>
+            <% lr_values += [ values.shift ] %>
+          <% end %>
+          <div class="splitcontentleft">
+            <% i = 0 %>
+            <% split_on = (lr_values.size / 2.0).ceil - 1 %>
+            <% lr_values.each do |value| %>
+              <p><%= custom_field_tag_with_label :issue, value, :required => @issue.required_attribute?(value.custom_field_id) %></p>
+              <%= wikitoolbar_for "issue_custom_field_values_#{value.custom_field_id}", preview_issue_path(:project_id => @issue.project, :issue_id => @issue.id) if value.custom_field.full_text_formatting? %>
+              <% if i == split_on %>
+                </div><div class="splitcontentright">
+              <% end %>
+              <% i += 1 %>
+            <% end %>
+          </div>
+        </div>
+      <% end %>
+    <% end %>
   </fieldset>
-<% end -%>
-  <% group_category_layout = value.custom_field.group_category_layout %>
-<fieldset class="group_category_layout" >
-  <legend>
-    <span title="<%= group_category_layout_description group_category_layout %>" class="field-description"><%= group_category_layout_display_name group_category_layout %>
-    </span>
-  </legend>
-<% end -%>
-    <p><%= custom_field_tag_with_label :issue, value, :required => @issue.required_attribute?(value.custom_field_id) %></p>
   <% end %>
-</fieldset>
-
-<% custom_field_values_full_width.each do |value| %>
-  <p><%= custom_field_tag_with_label :issue, value, :required => @issue.required_attribute?(value.custom_field_id) %></p>
-  <%= wikitoolbar_for "issue_custom_field_values_#{value.custom_field_id}", preview_issue_path(:project_id => @issue.project, :issue_id => @issue.id) if value.custom_field.full_text_formatting? %>
 <% end %>

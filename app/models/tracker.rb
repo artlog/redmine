@@ -36,6 +36,8 @@ class Tracker < ActiveRecord::Base
   has_and_belongs_to_many :custom_fields, :class_name => 'IssueCustomField',
                           :join_table => "#{table_name_prefix}custom_fields_trackers#{table_name_suffix}",
                           :association_foreign_key => 'custom_field_id'
+  has_many :attribute_groups, :dependent => :destroy
+  has_many :attribute_group_fields, :through => :attribute_groups
   acts_as_positioned
 
   validates_presence_of :default_status

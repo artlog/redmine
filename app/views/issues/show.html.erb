@@ -77,7 +77,7 @@
     rows.right l(:label_spent_time), issue_spent_hours_details(@issue), :class => 'spent-time'
   end
 end %>
-<%= render_half_width_custom_fields_rows(@issue) %>
+<%= render_custom_fields_rows(@issue) %>
 <%= call_hook(:view_issues_show_details_bottom, :issue => @issue) %>
 </div>
 
@@ -99,8 +99,6 @@ end %>
   <p><strong><%=l(:label_attachment_plural)%></strong></p>
   <%= link_to_attachments @issue, :thumbnails => true %>
 <% end %>
-
-<%= render_full_width_custom_fields_rows(@issue) %>
 
 <%= call_hook(:view_issues_show_description_bottom, :issue => @issue) %>
 

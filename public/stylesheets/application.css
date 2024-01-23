@@ -1975,3 +1975,48 @@ th[role=columnheader]:not(.no-sort):hover:after {
 	display: inline;
 	opacity: 1;
 }
+
+/* Custom Field Groups */
+.sortable_groups {
+  background: #eee;
+  border: 1px solid #888;
+  width: 445px;
+  min-height: 30px;
+  margin: 5px;
+  padding: 5px;
+}
+.sortable_groups div {
+  background: #ddf;
+  border: 1px solid #888;
+  min-height: 30px;
+  margin: 5px;
+  padding: 5px;
+}
+.sortable_items {
+  background: #eee;
+  border: 1px solid #888;
+  width: 400px;
+  min-height: 30px;
+  margin: 5px;
+  padding: 5px;
+}
+.sortable_items li {
+  background: #ffffff;
+  border: 1px solid #888;
+  margin: 5px;
+  padding: 5px;
+  list-style-type: none;
+  font-size: 1.2em;
+}
+.not_a_group {
+  padding: 5px 27px;
+}
+.ui-sortable-handle:before {
+  content:url('/images/reorder.png');
+  margin-right: 5px;
+}
+.ui-sortable-placeholder {
+  background: #8888ff;
+  border: 1px solid #888;
+  visibility: visible;
+}
