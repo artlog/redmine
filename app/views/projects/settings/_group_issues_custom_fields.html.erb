@@ -1,30 +1,30 @@
 <p><%= select_tag "tracker_id", options_from_collection_for_select(@project.trackers.collect, "id", "name"), {:required => true, :onchange => "refresh_trackers(this);"} %><p>
 
 <div id='custom_fields_form'>
-  <% @project.trackers.each do |t| %>
-  <div id='tracker_<%= t.id %>' class='tracker'>
+  <% @project.trackers.each do |tracker| %>
+  <div id='tracker_<%= tracker.id %>' class='tracker'>
     <span style="color: #888;"><%= l(:changed_cf_position) %></span>
-    <ul class='sortable_items sortable_tracker-<%= t.id %> nil not_a_group'>
-      <% @cfs.select{|x| x[0]==t.id && x[2]==nil}.each do |x| %>
+    <ul class='sortable_items sortable_tracker-<%= tracker.id %> nil not_a_group'>
+      <% @cfs.select{|x| x[0]==tracker.id && x[2]==nil}.each do |x| %>
       <li id="<%= x[6] %>" pos="<%= x[8] %>"><%= x[7] %></li>
       <% end %>
     </ul>
     <span style="color: #888;"><%= l(:global_cf_position) %></span>
-    <ul class="sortable_items sortable_tracker-<%= t.id %> unsorted not_a_group">
-      <% Issue.new(project_id: @project.id, tracker_id: t.id).custom_field_values.
-           select{|x| ! @cfs.select{|c| c[0]==t.id}.map{|c| c[6]}.include?(x.custom_field_id)}.
+    <ul class="sortable_items sortable_tracker-<%= tracker.id %> unsorted not_a_group">
+      <% Issue.new(project_id: @project.id, tracker_id: tracker.id).custom_field_values.
+           select{|x| ! @cfs.select{|c| c[0]==tracker.id}.map{|c| c[6]}.include?(x.custom_field_id)}.
            collect{|x| [x.custom_field.id, x.custom_field.name, x.custom_field.position]}.each do |x| %>
       <li id="<%= x[0] %>" pos="<%= x[2] %>"><%= x[1] %></li>
       <% end %>
     </ul>
     <span style="color: #888;"><%= l(:grouped_cf) %></span>
-    <div class='sortable_groups groups_tracker-<%= t.id %>'>
-      <% @cfs.select{|x| x[0]==t.id && x[2]!=nil}.map{|x| x[2]}.uniq.each do |g| %>
+    <div class='sortable_groups groups_tracker-<%= tracker.id %>'>
+      <% @cfs.select{|x| x[0]==tracker.id && x[2]!=nil}.map{|x| x[2]}.uniq.each do |group| %>
       <div class="sortable_group">
-        <input type="text" value="<%= g %>" style="background: #ddf; padding: 5px; width: 360px"/>
-        <img src="/images/delete.png" onclick="remove_label(this, 'tracker-<%= t.id %>');"/>
-        <ul class='sortable_items sortable_tracker-<%= t.id %>'>
-          <% @cfs.select{|x| x[0]==t.id && x[2]==g}.each do |x| %>
+        <input type="text" value="<%= group %>" style="background: #ddf; padding: 5px; width: 360px"/>
+        <img src="/images/delete.png" onclick="remove_label(this, 'tracker-<%= tracker.id %>');"/>
+        <ul class='sortable_items sortable_tracker-<%= tracker.id %>'>
+          <% @cfs.select{|x| x[0]==tracker.id && x[2]==group}.each do |x| %>
           <li id="<%= x[6] %>" pos="<%= x[8] %>"><%= x[7] %></li>
           <% end %>
         </ul>
@@ -32,7 +32,7 @@
       <% end %>
       <div>
         <input type="text" value="" style="background: #ddf; padding: 5px; width: 370px"/>
-        <img src="/images/add.png" style="" onclick="add_label(this, 'tracker-<%= t.id %>');"/>
+        <img src="/images/add.png" style="" onclick="add_label(this, 'tracker-<%= tracker.id %>');"/>
       </div>
     </div>
   </div>
@@ -110,23 +110,24 @@ function fill_json_data() {
 
     // Group 'nil'
     r[tracker_id] = {};
-    r[tracker_id][++gp] = {'cfs': {}};
+    record=r[tracker_id];
+    record[++gp] = {'cfs': {}};
     $(this).children('.nil').children().each(function () {
       cp++;
-      r[tracker_id][gp]['cfs'][cp] = this.id;
+      record[gp]['cfs'][cp] = this.id;
     });
-    if (! r[tracker_id][gp]['cfs'][1]) { delete r[tracker_id][gp]; }
+    if (! record[gp]['cfs'][1]) { delete record[gp]; }
     $(this).children('.sortable_groups').children().each(function () {
       if ($(this).children('ul').length) {
-        r[tracker_id][++gp] = {
+        record[++gp] = {
           'name': $(this).children('input').val(),
           'cfs': {}
         };
         cp = 0;
         $(this).children('ul').children().each(function () {
-          r[tracker_id][gp]['cfs'][++cp] = this.id;
+          record[gp]['cfs'][++cp] = this.id;
         });
-        if (! r[tracker_id][gp]['cfs'][1]) { r[tracker_id][gp] = ''; }
+        if (! record[gp]['cfs'][1]) { record[gp] = ''; }
       }
     });
     if ( ! r[tracker_id] ) { r[tracker_id] = ''; }
@@ -134,7 +135,7 @@ function fill_json_data() {
   console.log(r);
   $('#group_issues_custom_fields').val(JSON.stringify(r)); }
 $('#tracker_id').change();
-<% @project.trackers.each do |t| %>
-init_sortables('tracker-<%= t.id %>');
+<% @project.trackers.each do |tracker| %>
+init_sortables('tracker-<%= tracker.id %>');
 <% end %>
 </script>
