@@ -993,7 +993,7 @@ class Issue < ActiveRecord::Base
     if assigned_to_id_was.present? && assignee = Principal.find_by_id(assigned_to_id_was)
       users << assignee
     end
-    users.uniq.sort
+    users.uniq
   end
 
   # Versions that the issue can be assigned to

@@ -647,7 +647,7 @@ module ApplicationHelper
       s << content_tag('option', "<< #{l(:label_me)} >>", :value => User.current.id)
     end
     groups = +''
-    collection.sort.each do |element|
+    collection.each do |element|
       if option_value_selected?(element, selected) || element.id.to_s == selected
         selected_attribute = ' selected="selected"'
       end

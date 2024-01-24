@@ -438,7 +438,7 @@ module IssuesHelper
     users = issue.watcher_users.select{|u| u.status == User::STATUS_ACTIVE}
     assignable_watchers = issue.project.principals.assignable_watchers.limit(21)
     if assignable_watchers.size <= 20
-      users += assignable_watchers.sort
+      users += assignable_watchers.sorted
     end
     users.uniq
   end
