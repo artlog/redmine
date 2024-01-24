@@ -1,0 +1,5 @@
+# English strings go here for Rails i18n
+en:
+  # my_label: "My label"
+  label_attribute_category_plural: Attribute categories
+  label_attribute_category_new: New attribute category

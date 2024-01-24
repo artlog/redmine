@@ -372,8 +372,8 @@ module IssuesHelper
 
     keys_grouped = AttributeGroupField.joins(:attribute_group).
       where(:attribute_groups => {project_id: project_id, tracker_id: tracker_id}).
-      order("attribute_groups.position", :position).pluck("attribute_groups.id", :custom_field_id).
-      group_by{ |row| AttributeGroup.find(row.shift(1)).first() }
+      order("attribute_groups.position", :position).pluck("attribute_groups.name", :custom_field_id).
+      group_by{ |row| group_category_layout_attribute_category(row.shift())}
     logger.error keys_grouped
     custom_fields_grouped = { nil => (keys_grouped[nil].nil? ? [] :
       keys_grouped[nil].map{|n| custom_field_values.select{|x| x.custom_field[:id] == n[0]}}.flatten) |
@@ -391,7 +391,7 @@ module IssuesHelper
         group_content = ''.html_safe
         unless attribute_group.nil?
           if attribute_group.name.present?
-            title = attribute_group.name
+            title = attribute_group.name            
             group_content << content_tag('legend', title, :style => 'background: #0001; padding: 0.3em;') unless title.nil?
           end
           if attribute_group.description.present?
@@ -467,7 +467,7 @@ module IssuesHelper
     users = issue.watcher_users.select{|u| u.status == User::STATUS_ACTIVE}
     assignable_watchers = issue.project.principals.assignable_watchers.limit(21)
     if assignable_watchers.size <= 20
-      users += assignable_watchers.sort
+      users += assignable_watchers.sorted
     end
     users.uniq
   end

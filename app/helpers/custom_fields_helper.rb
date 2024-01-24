@@ -228,44 +228,74 @@ module CustomFieldsHelper
     end.join("\n").html_safe
   end
 
+  # Return a html select custom fields for which we want id.
+  def group_category_for_select(selected_attribute_category)
+    selected_attribute_id = 0
+    if selected_attribute_category.is_a?(String)
+      selected_attribute_category=group_category_layout_attribute_category(selected_attribute_category)
+      selected_attribute_category_id=selected_attribute_category.id if selected_attribute_category
+    else      
+      selected_attribute_category_id=selected_attribute_category.to_i if selected_attribute_category.respond_to?(:to_i)
+    end
+    attribute_categories=AttributeCategory.all
+    select='<select name="attribute_category[group_category_layout]" id="group_category_layout">'
+    select+='<option value=""'
+    select+=' selected="true"'
+    select+=">None</option>\n"
+    attribute_categories.each do |attribute_category|
+      attribute_category_id = attribute_category.id
+      select +='<option value="' + String(attribute_category_id)
+      if attribute_category_id == selected_attribute_category_id
+        select += '" selected="true'
+      end
+      select += '">' + attribute_category.name + "</option>\n"
+    end
+    select+='</select>'
+    select.html_safe
+  end
+
    # Return an array of custom fields for which we want id.
   def group_category_layout_for_select(selected_custom_field)
-    custom_fields=CustomField.all
+    attribute_categories=AttributeCategory.all
     select='<select name="custom_field[group_category_layout]" id="group_category_layout">'
     select+='<option value=""'
     if selected_custom_field.group_category_layout == ''
       select+=' selected="true"'
     end
     select+=">None</option>\n"
-    custom_fields.each do |custom_field|
-      id_str=String(custom_field.id)
+    attribute_categories.each do |attribute_category|
+      id_str=String(attribute_category.id)
       select +='<option value="' + id_str
       if id_str == selected_custom_field.group_category_layout
         select += '" selected="true'
       end
-      select += '">' + custom_field.name + "</option>\n"
+      select += '">' + attribute_category.name + "</option>\n"
     end
     select+='</select>'
     select.html_safe
   end
 
-  def group_category_layout_custom_field(identifier)
-    if /\A\d+\z/.match(identifier)
-      @custom_field =  CustomField.find(Integer(identifier))
-    end
+  def group_category_layout_attribute_category(identifier)
+    if identifier.respond_to?(:to_i)
+      @attribute_category =  AttributeCategory.find(identifier)
+    else
+      if identifier.respond_to?(:to_s) and /\A\d+\z/.match(identifier.to_s)
+        @attribute_category =  AttributeCategory.find(Integer(identifier))
+      end
+    end    
     rescue ActiveRecord::RecordNotFound
       nil
   end
 
   def group_category_layout_display_name(identifier)
-    @custom_field = group_category_layout_custom_field(identifier)
-    @custom_field ? @custom_field.name : identifier
+    @attribute_category = group_category_layout_attribute_category(identifier)
+    @attribute_category ? @attribute_category.name : identifier
   end
 
   def group_category_layout_description(identifier)
-    @custom_field = group_category_layout_custom_field(identifier)
-    title = @custom_field ? @custom_field.description.presence : nil
-    title ? title : identifier
+    @attribute_category = group_category_layout_attribute_category(identifier)
+    description = @attribute_category ? @attribute_category.description.presence : nil
+    description
   end
 
 end
