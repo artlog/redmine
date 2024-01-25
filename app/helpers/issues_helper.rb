@@ -374,12 +374,31 @@ module IssuesHelper
       where(:attribute_groups => {project_id: project_id, tracker_id: tracker_id}).
       order("attribute_groups.position", :position).pluck("attribute_groups.name", :custom_field_id).
       group_by{ |row| group_category_layout_attribute_category(row.shift())}
-    logger.error keys_grouped
-    custom_fields_grouped = { nil => (keys_grouped[nil].nil? ? [] :
-      keys_grouped[nil].map{|n| custom_field_values.select{|x| x.custom_field[:id] == n[0]}}.flatten) |
-      custom_field_values.select{|y| ! keys_grouped.values.flatten.include?(y.custom_field[:id])}}
-    keys_grouped.reject{|k,v| k == nil}.each{|k,v| custom_fields_grouped[k] =
-      v.map{|n| custom_field_values.select{|x| x.custom_field[:id] == n[0]}}.flatten}
+
+    if keys_grouped[nil].nil?
+      keys_grouped[nil] = []
+    end
+
+    attribute_group_custom_fields_id = keys_grouped.values.flatten
+    default_group = custom_field_values.select{|custom_field_value| ! attribute_group_custom_fields_id.include?(custom_field_value.custom_field[:id])}
+
+    if ! default_group.empty?
+      default_keys_grouped = CustomField.where(id: default_group.map{ |custom_field_value| custom_field_value.custom_field_id}).pluck(:group_category_layout,:id).group_by{ |row| group_category_layout_attribute_category(row.shift())}
+      logger.error default_keys_grouped
+      default_keys_grouped.each {|group,custom_field_id_array|
+        if keys_grouped[group].nil?
+          keys_grouped[group] = custom_field_id_array
+        else
+          keys_grouped[group].concat custom_field_id_array
+        end
+      }
+    end
+
+    logger.debug "Grouped fields project_id=" + project_id.to_s + " tracker_id=" + tracker_id.to_s + " key_grouped=" + keys_grouped.to_s + " overriden layout for custom_field ids :" +   attribute_group_custom_fields_id.to_s
+
+    custom_fields_grouped={ nil => [] }
+    keys_grouped.each{|group,v| custom_fields_grouped[group] =
+      v.map{|custom_field_id_array| custom_field_values.select{|custom_field_value| custom_field_value.custom_field[:id] == custom_field_id_array[0]}}.flatten}
     custom_fields_grouped
   end
 

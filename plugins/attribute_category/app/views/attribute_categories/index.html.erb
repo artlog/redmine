@@ -12,7 +12,7 @@
   <% @attribute_category.each do |attribute_category| %>    
   <tr>
     <td class="name">
-      <%= link_to attribute_category.name, attribute_category %>
+      <%= link_to attribute_category.name,  edit_attribute_category_path(attribute_category) %>
     </td>
     <td class="buttons">
       <%= delete_link attribute_category_path(attribute_category) %>

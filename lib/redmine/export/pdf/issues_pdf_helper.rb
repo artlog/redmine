@@ -113,10 +113,19 @@ module Redmine
             pdf.set_x(base_x)
           end
 
-          group_by_keys(issue.project_id, issue.tracker_id, issue.visible_custom_field_values).each do |title, values|
+          group_by_keys(issue.project_id, issue.tracker_id, issue.visible_custom_field_values).each do |attribute_group, values|
             if values.present?
-              unless title.nil?
-                pdf.RDMCell(35 + 155, 5, title, "LRT", 1)
+
+              unless attribute_group.nil?
+                if attribute_group.name.present?
+                  title = attribute_group.name
+                  pdf.RDMCell(35 + 155, 5, title, "LRT", 1) unless title.nil?
+                end
+                if attribute_group.description.present?
+                  description = attribute_group.description
+                  # FIXME layout for multilines and textilizable for pdf
+                  pdf.RDMCell(35 + 155, 5, description, "LRT", 1) unless description.nil?
+                end
               end
 
               while values.present?

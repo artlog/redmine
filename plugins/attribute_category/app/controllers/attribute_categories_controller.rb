@@ -23,14 +23,29 @@ class AttributeCategoriesController < ApplicationController
     end
   end
 
+  def edit
+     @attribute_category = AttributeCategory.find(params[:id])
+  end
+
+  def update
+     @attribute_category = AttributeCategory.find(params[:id])
+
+    if  @attribute_category.update(attribute_category_params)
+      redirect_to  @attribute_category
+    else
+      render :edit, status: :unprocessable_entity
+    end
+  end
+
   def destroy
     @attribute_category = AttributeCategory.find(params[:id])
     @attribute_category.destroy
 
     redirect_to attribute_category_path
   end
+  
   private
-    def attribute_params
+    def attribute_category_params
       params.require(:attribute_category).permit(:name, :description)
     end
   
