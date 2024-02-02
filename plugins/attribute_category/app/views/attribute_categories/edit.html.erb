@@ -1,0 +1,6 @@
+<%= title [l(@attribute_category.name), attribute_category_path], @attribute_category.name %>
+
+<%= labelled_form_for :attribute_category, @attribute_category, :url => attribute_category_path(@attribute_category), :html => {:method => :put, :multipart => true} do |f| %>
+  <%= render :partial => 'form', :locals => {:f => f} %>
+  <%= submit_tag l(:button_save) %>
+<% end %>

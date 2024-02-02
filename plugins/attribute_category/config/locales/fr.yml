@@ -1,0 +1,8 @@
+# English strings go here for Rails i18n
+en:
+  label_attribute_category_plural: Catégories d'attributs
+  label_attribute_category_new: Nouvelle catégorie d'attribut
+  grouped_cf: Groupes de champs personnalisés
+  global_cf_position: Conserver la position globale
+  changed_cf_position: Personaliser la position
+  field_group_category_layout: Agencement des champs dans les catégories

@@ -1,0 +1,23 @@
+<div class="contextual">
+<%= link_to_function l(:label_attribute_category_new), "location.href = '#{new_attribute_category_path}?tab=' + encodeURIComponent(($('.tabs a.selected').attr('id')||'').split('tab-').pop())", :class => 'icon icon-add' %>
+</div>
+
+<%= title l(:label_attribute_category_plural) %>
+
+<table class="list" >
+
+  <th><%=l(:field_name)%></th>
+  <th></th>
+    
+  <% @attribute_category.each do |attribute_category| %>    
+  <tr>
+    <td class="name">
+      <%= link_to attribute_category.name,  edit_attribute_category_path(attribute_category) %>
+    </td>
+    <td class="buttons">
+      <%= delete_link attribute_category_path(attribute_category) %>
+    </td>
+  </tr>
+  <% end %>
+    
+</table>

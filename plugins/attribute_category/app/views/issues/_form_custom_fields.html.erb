@@ -1,0 +1,53 @@
+<% group_by_keys(@issue.project_id, @issue.tracker_id, @issue.editable_custom_field_values).each do |attribute_group,values| %>
+  <% if values.present? %>
+  <fieldset class="group_category_layout" >
+    <% unless attribute_group.nil? %>
+      <% if attribute_group.name.present? %>
+        <% title = attribute_group.name %>
+        <% if not title.nil? %>
+          <legend>
+            <span title="<%= title %>" class="field-description"><%= title %>
+            </span>
+          </legend>
+	<% end %>
+      <% end %>
+      <% if attribute_group.description.present? %>
+        <% description = attribute_group.description %>
+        <% if not description.nil? %>
+          <div class="wiki">
+	    <%= textilizable(description) %>
+          </div>
+        <% end %>
+      <% end %>
+    <% end %>
+    <% while values.present? %>
+      <% if values[0].custom_field.full_width_layout? %>
+        <% while values.present? && values[0].custom_field.full_width_layout? %>
+          <% value = values.shift %>
+          <p><%= custom_field_tag_with_label :issue, value, :required => @issue.required_attribute?(value.custom_field_id) %></p>
+          <%= wikitoolbar_for "issue_custom_field_values_#{value.custom_field_id}", preview_issue_path(:project_id => @issue.project, :issue_id => @issue.id) if value.custom_field.full_text_formatting? %>
+        <% end %>
+      <% else %>
+        <div class="splitcontent">
+          <% lr_values = [] %>
+          <% while values.present? && ! values[0].custom_field.full_width_layout? %>
+            <% lr_values += [ values.shift ] %>
+          <% end %>
+          <div class="splitcontentleft">
+            <% i = 0 %>
+            <% split_on = (lr_values.size / 2.0).ceil - 1 %>
+            <% lr_values.each do |value| %>
+              <p><%= custom_field_tag_with_label :issue, value, :required => @issue.required_attribute?(value.custom_field_id) %></p>
+              <%= wikitoolbar_for "issue_custom_field_values_#{value.custom_field_id}", preview_issue_path(:project_id => @issue.project, :issue_id => @issue.id) if value.custom_field.full_text_formatting? %>
+              <% if i == split_on %>
+                </div><div class="splitcontentright">
+              <% end %>
+              <% i += 1 %>
+            <% end %>
+          </div>
+        </div>
+      <% end %>
+    <% end %>
+  </fieldset>
+  <% end %>
+<% end %>

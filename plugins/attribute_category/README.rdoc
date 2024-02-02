@@ -1,0 +1,5 @@
+= attribute_category
+
+Feature to Group Custom Fields by Category
+
+Discussion here : https://www.redmine.org/boards/1/topics/69072

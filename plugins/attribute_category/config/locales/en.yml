@@ -1,0 +1,8 @@
+# English strings go here for Rails i18n
+en:
+  label_attribute_category_plural: Attribute categories
+  label_attribute_category_new: New attribute category
+  grouped_cf: Grouped Custom Fields
+  global_cf_position: Global Custom Fields Position
+  changed_cf_position: Changed Custom Fields Position
+  field_group_category_layout: Group Category Layout
