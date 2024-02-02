@@ -46,6 +46,10 @@
 <% end %>
 </div>
 
+<% content_for :header_tags do %>
+    <%= stylesheet_link_tag 'attribute_category', plugin: 'attribute_category' %>
+<% end %>
+
 <script>
 function init_sortables(labelclass) {
   $( '.groups_' + labelclass ).sortable({
