@@ -14,7 +14,7 @@ class AttributeCategoriesController < ApplicationController
 
   
   def create
-    @attribute_category = AttributeCategory.new(attribute_params)
+    @attribute_category = AttributeCategory.new(attribute_category_params)
 
     if @attribute_category.save
       redirect_to @attribute_category
