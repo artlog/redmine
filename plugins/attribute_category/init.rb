@@ -50,7 +50,7 @@ Redmine::Plugin.register :attribute_category do
     IssuesHelper.include IssuesHelperPatch
   end
 
-  menu :admin_menu, :attribute_categories, { controller: :attribute_categories, action: :index }, caption: 'Attribute Categories'
+  menu :admin_menu, :attribute_categories, { controller: :attribute_categories, action: :index }, caption:  :label_attribute_category_plural, :html => {:class => 'icon icon-custom-fields'}
 
   permission :group_issues_custom_fields, {:group_issues_custom_fields => [:group_issues_custom_fields, :index], :projects => [:save_group_issues_custom_fields]}, :require => :member
   menu :project_menu, :group_issues_custom_fields, { controller: :group_issues_custom_fields, action: :index }, caption: :grouped_cf, after: :setting, param: :project_id  
