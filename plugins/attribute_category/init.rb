@@ -35,7 +35,7 @@ Redmine::Plugin.register :attribute_category do
   name 'Attribute Category plugin'
   author 'Philippe Lhardy'
   description 'Adds Category Groups for custom attributes. Sponsored by Orange.'
-  version '0.9'
+  version '5.1.1.0.1'
   url 'https://www.redmine.org/boards/1/topics/69072'
   author_url 'https://www.redmine.org/users/681631'
 

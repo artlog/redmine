@@ -1,5 +1,31 @@
+This is a redmine plugin to group custom fields within a category with a possibl
+e description in wiki format
+
+This code was sponsored by Orange
+
 = attribute_category
 
 Feature to Group Custom Fields by Category
 
 Discussion here : https://www.redmine.org/boards/1/topics/69072
+
+== Install
+
+uncompress attribute_catogry within plugins directory
+
+This plugin add new models/tables and new column/fields then a migration is required.
+
+General procedure to operate redmin plugins is here : https://www.redmine.org/projects/redmine/wiki/Plugins
+
+== Uninstall
+
+First take a backup of your current install if you ever want to get your group category ever again.
+
+Then migrate backward :
+
+bin/bundle exec rake redmine:plugins:migrate NAME=attribute_category VERSION=0 RAILS_ENV=production
+
+and finaly remove attribute_category plugin.
+
+
+6th Feburary 2024
