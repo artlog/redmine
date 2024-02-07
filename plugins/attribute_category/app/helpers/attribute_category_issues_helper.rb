@@ -23,7 +23,7 @@ module AttributeCategoryIssuesHelper
     keys_grouped = AttributeGroupField.joins(:attribute_group).
       where(:attribute_groups => {project_id: project_id, tracker_id: tracker_id}).
       order("attribute_groups.position", :position).pluck("attribute_groups.name", :custom_field_id).
-      group_by{ |row| group_category_layout_attribute_category(row.shift())}
+      group_by{ |row| row.shift() }
 
     if keys_grouped[nil].nil?
       keys_grouped[nil] = []
@@ -33,7 +33,7 @@ module AttributeCategoryIssuesHelper
     default_group = custom_field_values.select{|custom_field_value| ! attribute_group_custom_fields_id.include?(custom_field_value.custom_field[:id])}
 
     if ! default_group.empty?
-      default_keys_grouped = CustomField.where(id: default_group.map{ |custom_field_value| custom_field_value.custom_field_id}).pluck(:group_category_layout,:id).group_by{ |row| group_category_layout_attribute_category(row.shift())}
+      default_keys_grouped = CustomField.where(id: default_group.map{ |custom_field_value| custom_field_value.custom_field_id}).pluck(:group_category_layout,:id).group_by{ |row| row.shift()}
       logger.error default_keys_grouped
       default_keys_grouped.each {|group,custom_field_id_array|
         if keys_grouped[group].nil?
@@ -44,50 +44,64 @@ module AttributeCategoryIssuesHelper
       }
     end
 
-    logger.debug "Grouped fields project_id=" + project_id.to_s + " tracker_id=" + tracker_id.to_s + " key_grouped=" + keys_grouped.to_s + " overriden layout for custom_field ids :" +   attribute_group_custom_fields_id.to_s
-
     custom_fields_grouped={ nil => [] }
-    keys_grouped.each{|group,v| custom_fields_grouped[group] =
-      v.map{|custom_field_id_array| custom_field_values.select{|custom_field_value| custom_field_value.custom_field[:id] == custom_field_id_array[0]}}.flatten}
+
+    keys_grouped.each do |internal_group_name,v|
+      attribute_group = AttributeGroup.where(:attribute_groups => {project_id: project_id, tracker_id: tracker_id, name: internal_group_name}).first()
+      attribute_group_category = AttributeGroupCategory.new( attribute_group, group_category_layout_attribute_category(internal_group_name))
+      custom_fields_grouped[attribute_group_category] = v.map{|custom_field_id_array| custom_field_values.select{|custom_field_value| custom_field_value.custom_field[:id] == custom_field_id_array[0]}}.flatten
+    end
     custom_fields_grouped
+  end
+
+  def render_custom_field_value_full_width(value)
+    content = content_tag('div', custom_field_name_tag(value.custom_field) + ":", :class => 'label') +
+              content_tag('div', custom_field_value_tag(value), :class => 'value')
+    content = content_tag('div', content, :class => "#{value.custom_field.css_classes} attribute")
+    content_tag('div', content, :class => 'splitcontent')
   end
 
   def render_custom_fields_rows(issue)
     s = ''.html_safe
     group_by_keys(issue.project_id, issue.tracker_id, issue.visible_custom_field_values).
-      each do |attribute_group, values|
+      each do |attribute_group_category, values|
       if values.present?
         group_content = ''.html_safe
-        unless attribute_group.nil?
-          if attribute_group.name.present?
-            title = attribute_group.name
+        unless attribute_group_category.nil?
+          if attribute_group_category.name.present?
+            title = attribute_group_category.name
             group_content << content_tag('legend', title, :style => 'background: #0001; padding: 0.3em;') unless title.nil?
           end
-          if attribute_group.description.present?
-            description = attribute_group.description
+          if attribute_group_category.description.present?
+            description = attribute_group_category.description
             group_content << content_tag('div', textilizable(description), :class => 'wiki') unless description.nil?
           end
         end
-        while values.present?
-          unless values[0].custom_field.full_width_layout?
-            lr_values = []
-            while values.present? && ! values[0].custom_field.full_width_layout?
-              lr_values += [ values.shift ]
-            end
-            half = (lr_values.size / 2.0).ceil
-            group_content<< issue_fields_rows do |rows|
-              lr_values.each_with_index do |value, i|
-                m = (i < half ? :left : :right)
-                rows.send m, custom_field_name_tag(value.custom_field), custom_field_value_tag(value), :class => value.custom_field.css_classes
+        full_width_layout = ( not attribute_group_category.nil? ) && ( attribute_group_category.respond_to?(:full_width_layout) && attribute_group_category.full_width_layout )
+        if full_width_layout
+          while values.present?
+            value=values.shift
+            group_content << render_custom_field_value_full_width(value)
+          end
+        else
+          while values.present?
+            unless values[0].custom_field.full_width_layout?
+              lr_values = []
+              while values.present? && ! values[0].custom_field.full_width_layout?
+                lr_values += [ values.shift ]
               end
-            end
-          else
-            while values.present? && values[0].custom_field.full_width_layout?
-              value=values.shift
-              content = content_tag('div', custom_field_name_tag(value.custom_field) + ":", :class => 'label') +
-                        content_tag('div', custom_field_value_tag(value), :class => 'value')
-              content = content_tag('div', content, :class => "#{value.custom_field.css_classes} attribute")
-              group_content << content_tag('div', content, :class => 'splitcontent')
+              half = (lr_values.size / 2.0).ceil
+              group_content<< issue_fields_rows do |rows|
+                lr_values.each_with_index do |value, i|
+                  m = (i < half ? :left : :right)
+                  rows.send m, custom_field_name_tag(value.custom_field), custom_field_value_tag(value), :class => value.custom_field.css_classes
+                end
+              end
+            else
+              while values.present? && values[0].custom_field.full_width_layout?
+                value=values.shift
+                group_content << render_custom_field_value_full_width(value)
+              end
             end
           end
         end

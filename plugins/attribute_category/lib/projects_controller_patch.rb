@@ -15,9 +15,9 @@ module ProjectsControllerPatch
           v.each do |gp, g|
             gid = groups.shift
             if gid.nil?
-              gid=AttributeGroup.create(project_id: @project.id, tracker_id: tid, name: g["name"].nil? ? nil : g["name"], position: gp).id
+              gid=AttributeGroup.create(project_id: @project.id, tracker_id: tid, name: g["name"].nil? ? nil : g["name"], position: gp, full_width_layout: g["full_width_layout"]).id
             else
-              AttributeGroup.update(gid, project_id: @project.id, tracker_id: tid, name: g["name"].nil? ? nil : g["name"], position: gp)
+              AttributeGroup.update(gid, project_id: @project.id, tracker_id: tid, name: g["name"].nil? ? nil : g["name"], position: gp, full_width_layout: g["full_width_layout"])
             end
             g['cfs'].each do |cfp, cf|
               cfid = fields.shift

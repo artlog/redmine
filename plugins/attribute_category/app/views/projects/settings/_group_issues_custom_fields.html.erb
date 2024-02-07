@@ -21,7 +21,13 @@
     <div class='sortable_groups groups_tracker-<%= tracker.id %>'>
       <% @cfs.select{|x| x[0]==tracker.id && x[2]!=nil}.map{|x| x[2]}.uniq.each do |group_name| %>
       <div class="sortable_group">
-	<%= group_category_for_select group_name %>
+       <%= group_category_for_select group_name %>
+       <% full_width_layout = false %>
+         <% @cfs.select{|y| y.length > 9 && y[0]==tracker.id && y[2]==group_name}.each do |grouped_field| %>
+         <% full_width_layout ||= grouped_field[9] %>
+         <% end %>
+         <label for='full_width_layout'><%=l(:field_full_width_layout)%></label>
+       <%= check_box_tag :full_width_layout, full_width_layout, full_width_layout, :full_width_layout %>
         <img src="/images/delete.png" onclick="remove_label(this, 'tracker-<%= tracker.id %>');"/>
         <ul class='sortable_items sortable_tracker-<%= tracker.id %>'>
           <% @cfs.select{|x| x[0]==tracker.id && x[2]==group_name}.each do |x| %>
@@ -31,7 +37,8 @@
       </div>
       <% end %>
       <div>
-	<%= group_category_for_select 0 %>
+        <%= group_category_for_select 0 %>
+        <%= check_box_tag :full_width_layout,'false',false,'false' %>
         <img src="/images/add.png" style="" onclick="add_label(this, 'tracker-<%= tracker.id %>');"/>
       </div>
     </div>

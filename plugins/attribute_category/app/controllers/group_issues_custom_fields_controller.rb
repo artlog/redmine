@@ -16,7 +16,7 @@ class GroupIssuesCustomFieldsController < ApplicationController
         @cfs=AttributeGroup.joins(:custom_fields).joins(:tracker).
                where(project_id: @project, tracker_id: @trackers, :custom_fields => {id: @project.all_issue_custom_fields.pluck(:id)}).
                pluck("trackers.id", "id", "name", "position","attribute_group_fields.id", "attribute_group_fields.position",
-                     "custom_fields.id", "custom_fields.name", "custom_fields.position").sort_by{|x| [x[3], x[5]]}
+                     "custom_fields.id", "custom_fields.name", "custom_fields.position","full_width_layout").sort_by{|x| [x[3], x[5]]}
 
         logger.info 'WITHIN GroupIssuesCustomFieldsController with project'
         render 'projects/settings/_group_issues_custom_fields'

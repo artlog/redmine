@@ -21,8 +21,9 @@
       <% end %>
     <% end %>
     <% while values.present? %>
-      <% if values[0].custom_field.full_width_layout? %>
-        <% while values.present? && values[0].custom_field.full_width_layout? %>
+    <% full_width_layout = ( not attribute_group.nil? ) && ( attribute_group.respond_to?(:full_width_layout) && attribute_group.full_width_layout ) %>
+      <% if full_width_layout or values[0].custom_field.full_width_layout? %>
+        <% while values.present? && ( full_width_layout || values[0].custom_field.full_width_layout? ) %>
           <% value = values.shift %>
           <p><%= custom_field_tag_with_label :issue, value, :required => @issue.required_attribute?(value.custom_field_id) %></p>
           <%= wikitoolbar_for "issue_custom_field_values_#{value.custom_field_id}", preview_issue_path(:project_id => @issue.project, :issue_id => @issue.id) if value.custom_field.full_text_formatting? %>

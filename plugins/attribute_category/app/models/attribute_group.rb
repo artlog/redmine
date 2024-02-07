@@ -8,5 +8,10 @@ class AttributeGroup < ActiveRecord::Base
 
   scope :sorted, lambda { order(:position) }
 
-  safe_attributes 'name', 'position'
+  safe_attributes 'name', 'position', 'full_width_layout'
+
+  def full_width_layout?
+    ActiveRecord::Type::Boolean.new.cast(full_width_layout)
+  end
+
 end
