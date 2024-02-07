@@ -58,7 +58,6 @@ function fill_json_data() {
   $('#custom_fields_form').children('div').each(function () {
     var tracker_id = this.id.split('_').pop();
     gp = 0, cp = 0;
-
     // Group 'nil'
     r[tracker_id] = {};
     record=r[tracker_id];
@@ -69,22 +68,26 @@ function fill_json_data() {
     });
     if (! record[gp]['cfs'][1]) { delete record[gp]; }
     $(this).children('.sortable_groups').children().each(function () {
-        if ($(this).children('ul').length) {
-            selected_attribute_category=$(this).children('select');
-            record[++gp] = {
-                'name': selected_attribute_category.val(),
-                'cfs': {}
-            };
-            cp = 0;
-            $(this).children('ul').children().each(function () {
-                record[gp]['cfs'][++cp] = this.id;
-            });
+      var  sortable_group = $(this);
+      if (sortable_group.children('ul').length) {
+        selected_attribute_category=sortable_group.children('select');
+        record[++gp] = {
+          'name': selected_attribute_category.val(),
+          'cfs': {}
+        };
+        sortable_group.children('input').each(function ()  {
+          var checkbox = this;
+          record[gp][checkbox.id]=checkbox.checked;
+        });
+        cp = 0;
+        sortable_group.children('ul').children().each(function () {
+          record[gp]['cfs'][++cp] = this.id;
+        });
         if (! record[gp]['cfs'][1]) { record[gp] = ''; }
       }
     });
     if ( ! r[tracker_id] ) { r[tracker_id] = ''; }
   });
   console.log(r);
-    $('#group_issues_custom_fields').val(JSON.stringify(r));
+  $('#group_issues_custom_fields').val(JSON.stringify(r));
 }
-
