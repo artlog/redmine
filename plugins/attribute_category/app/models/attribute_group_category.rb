@@ -6,11 +6,11 @@ class AttributeGroupCategory
   end
 
   def name
-    @attribute_category.name
+    @attribute_category.nil? ? nil : @attribute_category.name
   end
 
   def description
-    @attribute_category.description
+    @attribute_category.nil? ? nil : @attribute_category.description
   end
 
   def full_width_layout
